@@ -3,6 +3,7 @@ package db
 import (
 	"fmt"
 	"github.com/jackc/pgx"
+	"log"
 )
 
 var dataBasePool *pgx.ConnPool
@@ -27,6 +28,22 @@ func CreateDataBaseConnection(user, password, host, name string, maxConn int) {
 		//log.Println(err);
 		return
 	}
+}
+
+
+func InitDataBase() {
+	_, err := dataBasePool.Exec(`
+	DROP TABLE IF EXISTS requests;
+	
+	CREATE TABLE IF NOT EXISTS requests (
+    id SERIAL NOT NULL PRIMARY KEY,
+    headers text[],
+    body bit[]
+);`)
+	 if err != nil {
+		log.Println(err)
+	}
+
 }
 
 func GetDataBase() *pgx.ConnPool {

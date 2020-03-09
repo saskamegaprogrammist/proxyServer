@@ -1,4 +1,4 @@
-module github.com/saskamegaprogrammist/
+module github.com/saskamegaprogrammist/proxyServer
 
 go 1.13
 
