@@ -37,8 +37,15 @@ func InitDataBase() {
 	
 	CREATE TABLE IF NOT EXISTS requests (
     id SERIAL NOT NULL PRIMARY KEY,
+    method text,
+    urlhost text,
+    urlscheme text,
     headers text[],
-    body bit[]
+    body text,
+    contentlength int,
+    host text,
+    remoteaddr text,
+    requesturi text
 );`)
 	 if err != nil {
 		log.Println(err)

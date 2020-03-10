@@ -17,3 +17,13 @@ func CreateAnswer(w http.ResponseWriter, statusCode int, value interface{})  {
 		//log.Println(err)
 	}
 }
+
+func CopyHeader(dst, src http.Header) {
+	for k, vv := range src {
+		var value string
+		for _, v := range vv {
+			value = value + v
+			dst.Add(k, v)
+		}
+	}
+}

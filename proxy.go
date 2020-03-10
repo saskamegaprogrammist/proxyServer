@@ -2,8 +2,11 @@ package main
 
 import (
 	"crypto/tls"
+	"fmt"
 	"github.com/saskamegaprogrammist/proxyServer/certificate"
 	"github.com/saskamegaprogrammist/proxyServer/db"
+	"github.com/saskamegaprogrammist/proxyServer/requests"
+	"github.com/saskamegaprogrammist/proxyServer/utils"
 	"io"
 	"io/ioutil"
 	"log"
@@ -12,32 +15,44 @@ import (
 
 var rootCertificate certificate.Cert
 
-
-func copyHeader(dst, src http.Header) []string {
-	header := make([]string, 0)
-	for k, vv := range src {
-		header = append(header, k)
-		var value string
-		for _, v := range vv {
-			value = value + v
-			dst.Add(k, v)
-		}
-		header = append(header, value)
+func saveToDB(req *http.Request) {
+	var reqModel requests.Request
+	reqModel.Method = req.Method
+	reqModel.URLhost = req.URL.Host
+	reqModel.URLscheme = req.URL.Scheme
+	header := make(map[string]string, 0)
+	for k, v := range req.Header {
+		header[k] = v[0]
 	}
-	return header
+	reqModel.Header = header
+	body,_ := ioutil.ReadAll(req.Body)
+	bodyString := string(body)
+	reqModel.Body = bodyString
+	reqModel.ContentLength = int(req.ContentLength)
+	reqModel.Host = req.Host
+	reqModel.RemoteAddr = req.RemoteAddr
+	reqModel.RequestURI = req.RequestURI
+	err := reqModel.SaveRequest()
+	if err != nil {
+		log.Println(err)
+	}
 }
 
-func transfer(destination io.WriteCloser, source io.ReadCloser) {
+
+func transfer(destination io.WriteCloser, source io.ReadCloser, copy bool) {
 	defer destination.Close()
 	defer source.Close()
-	var a []byte
-	source.Read(a)
-	log.Println(a)
-	io.Copy(destination, source)
+	if copy {
+		var buffer []byte
+		io.ReadFull(source,buffer)
+		fmt.Println("buffer", buffer)
+	} else {
+		io.Copy(destination, source)
+	}
 }
 
 func handleCONNECT(writer http.ResponseWriter, req *http.Request) {
-	log.Println(req.Host)
+	log.Println(req)
 	cert, err := certificate.CreateLeafCertificate(req.Host)
 	if err != nil {
 		log.Println(err)
@@ -67,13 +82,12 @@ func handleCONNECT(writer http.ResponseWriter, req *http.Request) {
 	tlsConnection := tls.Server(clientConnection, tlsConfig)
 	err = tlsConnection.Handshake()
 
-	go transfer(destinationConnection, tlsConnection)
-	go transfer(tlsConnection, destinationConnection)
+	go transfer(destinationConnection, tlsConnection, true)
+	go transfer(tlsConnection, destinationConnection, false)
 }
 
 func handleHTTPRequests(writer http.ResponseWriter, req *http.Request) {
-	//req.URL, _ = url.ParseRequestURI(req.RequestURI)
-	log.Println(req)
+	saveToDB(req)
 	resp, err := http.DefaultTransport.RoundTrip(req)
 	if err != nil {
 		log.Printf("proxy error: %s, request: %+v", err.Error(), req)
@@ -82,27 +96,10 @@ func handleHTTPRequests(writer http.ResponseWriter, req *http.Request) {
 	}
 	log.Printf("status code: %d", resp.StatusCode)
 	defer resp.Body.Close()
-	headerString := copyHeader(writer.Header(), resp.Header)
+	utils.CopyHeader(writer.Header(), resp.Header)
 	writer.WriteHeader(resp.StatusCode)
 	io.Copy(writer, resp.Body)
 
-	dataBase := db.GetDataBase()
-	transaction, _ := dataBase.Begin()
-	body,_ := ioutil.ReadAll(resp.Body)
-	bodyString := string(body)
-	log.Println(bodyString)
-	_, err = transaction.Exec("INSERT INTO requests (headers) VALUES ($1) ", headerString)
-	if err != nil {
-		log.Println(err)
-		err = transaction.Rollback()
-		if err != nil {
-			log.Fatalln(err)
-		}
-	}
-	err = transaction.Commit()
-	if err != nil {
-		log.Fatalln(err)
-	}
 }
 
 func handleRequests(writer http.ResponseWriter, req *http.Request) {

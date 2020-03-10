@@ -12,8 +12,11 @@ func main() {
 	db.CreateDataBaseConnection("alexis", "sinope27", "localhost", "proxy", 20)
 	//db.InitDataBase()
 	r := mux.NewRouter()
-	r.HandleFunc("/lastreqs", handlers.GetLastRequests).Methods("GET")
-	r.HandleFunc("/request/{id}", handlers.MakeRequest).Methods("GET")
+	handlers.RepeaterClient = &http.Client{}
+	r.HandleFunc("/requests", handlers.GetLastRequests).Methods("GET")
+	r.HandleFunc("/requests/{id}", handlers.MakeRequest).Methods("GET")
+	
+
 
 	err := http.ListenAndServe(":5001", r)
 	if err != nil {
