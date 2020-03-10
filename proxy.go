@@ -5,6 +5,7 @@ import (
 	"github.com/saskamegaprogrammist/proxyServer/certificate"
 	"github.com/saskamegaprogrammist/proxyServer/db"
 	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 )
@@ -29,6 +30,9 @@ func copyHeader(dst, src http.Header) []string {
 func transfer(destination io.WriteCloser, source io.ReadCloser) {
 	defer destination.Close()
 	defer source.Close()
+	var a []byte
+	source.Read(a)
+	log.Println(a)
 	io.Copy(destination, source)
 }
 
@@ -69,6 +73,7 @@ func handleCONNECT(writer http.ResponseWriter, req *http.Request) {
 
 func handleHTTPRequests(writer http.ResponseWriter, req *http.Request) {
 	//req.URL, _ = url.ParseRequestURI(req.RequestURI)
+	log.Println(req)
 	resp, err := http.DefaultTransport.RoundTrip(req)
 	if err != nil {
 		log.Printf("proxy error: %s, request: %+v", err.Error(), req)
@@ -83,9 +88,9 @@ func handleHTTPRequests(writer http.ResponseWriter, req *http.Request) {
 
 	dataBase := db.GetDataBase()
 	transaction, _ := dataBase.Begin()
-	var a []byte
-	resp.Body.Read(a)
-	log.Println(a)
+	body,_ := ioutil.ReadAll(resp.Body)
+	bodyString := string(body)
+	log.Println(bodyString)
 	_, err = transaction.Exec("INSERT INTO requests (headers) VALUES ($1) ", headerString)
 	if err != nil {
 		log.Println(err)
