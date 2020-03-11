@@ -2,8 +2,9 @@ FROM golang:1.13 AS build
 
 ADD . /opt/app
 WORKDIR /opt/app
-RUN cd proxy/repeater && go build .
-RUN cd proxy/proxy && go build .
+RUN ls
+RUN cd /proxy/repeater && go build .
+RUN cd /proxy/proxy && go build .
 
 
 FROM ubuntu:18.04 AS release
