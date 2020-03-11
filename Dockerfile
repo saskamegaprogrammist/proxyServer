@@ -5,7 +5,6 @@ WORKDIR /opt/app
 RUN ls
 RUN cd repeater && go build .
 RUN cd proxy && go build .
-opt/app/proxy
 
 FROM ubuntu:18.04 AS release
 
