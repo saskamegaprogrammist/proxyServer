@@ -9,8 +9,8 @@ import (
 )
 
 func main() {
-	db.CreateDataBaseConnection("docker", "docker", "localhost", "docker", 20)
-	//db.CreateDataBaseConnection("alexis", "sinope27", "localhost", "proxy", 20)
+	//db.CreateDataBaseConnection("docker", "docker", "localhost", "docker", 20)
+	db.CreateDataBaseConnection("alexis", "sinope27", "localhost", "proxy", 20)
 	r := mux.NewRouter()
 	handlers.RepeaterClient = &http.Client{}
 	r.HandleFunc("/requests", handlers.GetLastRequests).Methods("GET")
@@ -18,7 +18,7 @@ func main() {
 	
 
 
-	err := http.ListenAndServe(":5001", r)
+	err := http.ListenAndServe("127.0.0.1:5001", r)
 	if err != nil {
 		log.Fatal(err)
 		return

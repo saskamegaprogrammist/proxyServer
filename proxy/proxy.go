@@ -145,8 +145,8 @@ func handleRequests(writer http.ResponseWriter, req *http.Request) {
 
 func main() {
 
-	db.CreateDataBaseConnection("docker", "docker", "localhost", "docker", 20)
-	//db.CreateDataBaseConnection("alexis", "sinope27", "localhost", "proxy", 20)
+	//db.CreateDataBaseConnection("docker", "docker", "localhost", "docker", 20)
+	db.CreateDataBaseConnection("alexis", "sinope27", "localhost", "proxy", 20)
 	db.InitDataBase()
 
 	server := &http.Server{
