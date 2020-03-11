@@ -5,7 +5,7 @@ WORKDIR /opt/app
 RUN ls
 RUN cd repeater && go build .
 RUN cd proxy && go build .
-
+opt/app/proxy
 
 FROM ubuntu:18.04 AS release
 
@@ -44,7 +44,7 @@ EXPOSE 5001
 
 COPY --from=build /opt/app/proxy /usr/bin/
 COPY --from=build /opt/app/repeater /usr/bin/
-COPY --from=build /opt/app/rootCert.cert /usr/bin/rootCert.cert
-COPY --from=build  /opt/app/rootKey.pem /usr/bin/rootKey.pem
+COPY --from=build /opt/app/rootCert.cert /rootCert.cert
+COPY --from=build  /opt/app/rootKey.pem /rootKey.pem
 
 CMD service postgresql start && proxy && repeater
