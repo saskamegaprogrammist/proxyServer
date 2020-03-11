@@ -42,7 +42,7 @@ EXPOSE 5000
 
 EXPOSE 5001
 
-COPY --from=build /opt/app/proxy/proxy /usr/bin/
-COPY --from=build /opt/app/proxy/repeater /usr/bin/
+COPY --from=build /opt/app/proxy /usr/bin/
+COPY --from=build /opt/app/repeater /usr/bin/
 
 CMD service postgresql start && proxy && repeater
