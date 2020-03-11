@@ -24,9 +24,9 @@ type Request struct {
 func (reqModel*Request) SaveRequest() error {
 	dataBase := db.GetDataBase()
 	transaction, _ := dataBase.Begin()
-	header := make([]string, 0)
+	var header string
 	for k, v := range reqModel.Header {
-		header = append(header, fmt.Sprintf("%s : %s", k, v))
+		header = fmt.Sprintf("%s%s : %s ; ", header, k, v)
 	}
 	_, err := transaction.Exec("INSERT INTO requests (method, urlhost, urlscheme, headers, body, contentlength, host, remoteaddr, requesturi) VALUES  ($1, $2, $3, $4, $5, $6, $7, $8, $9) ",
 		reqModel.Method, reqModel.URLhost, reqModel.URLscheme, header, reqModel.Body, reqModel.ContentLength, reqModel.Host,
@@ -62,8 +62,8 @@ func (reqModel*Request) GetRequests() ([]Request, error) {
 	}
 	for rows.Next() {
 		var reqRetrieved Request
-		var headerArray []string
-		err = rows.Scan(&reqRetrieved.Id, &reqRetrieved.Method, &reqRetrieved.URLhost, &reqRetrieved.URLscheme, &headerArray,
+		var headerString string
+		err = rows.Scan(&reqRetrieved.Id, &reqRetrieved.Method, &reqRetrieved.URLhost, &reqRetrieved.URLscheme, &headerString,
 			&reqRetrieved.Body, &reqRetrieved.ContentLength, &reqRetrieved.Host, &reqRetrieved.RemoteAddr, &reqRetrieved.RequestURI)
 		if err != nil {
 			log.Println(err)
@@ -73,7 +73,7 @@ func (reqModel*Request) GetRequests() ([]Request, error) {
 			}
 			return requestsFound, err
 		}
-		reqRetrieved.Header = getHeader(headerArray)
+		reqRetrieved.Header = getHeader(headerString)
 		requestsFound = append(requestsFound, reqRetrieved)
 	}
 
@@ -88,7 +88,7 @@ func (reqModel*Request) GetRequests() ([]Request, error) {
 func (reqModel*Request) GetRequest(id int) error {
 	dataBase := db.GetDataBase()
 	transaction, _ := dataBase.Begin()
-	var headerArray []string
+	var headerArray string
 	row := transaction.QueryRow("SELECT id, method, urlhost, urlscheme, headers, body, contentlength, host, remoteaddr, requesturi FROM requests WHERE id = $1", id)
 	err := row.Scan(&reqModel.Id, &reqModel.Method, &reqModel.URLhost, &reqModel.URLscheme, &headerArray,
 		&reqModel.Body, &reqModel.ContentLength, &reqModel.Host, &reqModel.RemoteAddr, &reqModel.RequestURI)
@@ -108,11 +108,14 @@ func (reqModel*Request) GetRequest(id int) error {
 	return nil
 }
 
-func getHeader(headerDB []string) map[string]string {
+func getHeader(headerDB string) map[string]string {
 	headerMap := make(map[string]string, 0)
-	for _, header := range headerDB {
+	headerArray := strings.Split(headerDB, " ; ")
+	for _, header := range headerArray {
 		keyVal := strings.Split(header, " : ")
-		headerMap[keyVal[0]] = keyVal[1]
+		if len(keyVal) == 2 {
+			headerMap[keyVal[0]] = keyVal[1]
+		}
 	}
 	return headerMap
 }

@@ -40,7 +40,7 @@ func InitDataBase() {
     method text,
     urlhost text,
     urlscheme text,
-    headers text[],
+    headers text,
     body text,
     contentlength int,
     host text,
