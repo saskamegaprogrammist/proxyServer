@@ -3,7 +3,7 @@ FROM golang:1.13 AS build
 ADD . /opt/app
 WORKDIR /opt/app
 RUN cd proxy && go build
-#RUN cd repeater && go build
+RUN cd repeater && go build
 
 FROM ubuntu:18.04 AS release
 
@@ -46,5 +46,5 @@ COPY --from=build  /opt/app/rootKey.pem /rootKey.pem
 
 RUN apt-get update  && apt-get install -y curl
 
-CMD service postgresql start && proxy ##&& repeater
+CMD service postgresql start && proxy && repeater
 

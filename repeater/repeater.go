@@ -18,7 +18,7 @@ func main() {
 	
 
 
-	err := http.ListenAndServe("127.0.0.1:5001", r)
+	err := http.ListenAndServe(":5001", r)
 	if err != nil {
 		log.Fatal(err)
 		return
