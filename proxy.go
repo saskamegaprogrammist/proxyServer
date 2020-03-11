@@ -41,14 +41,14 @@ func saveToDB(req *http.Request, scheme string) {
 	}
 }
 
-func copyBufferToDB(buffer *bytes.Buffer) {
+func copyBufferToDB(buffer *bytes.Buffer, requestHost string) {
 	p := make([]byte, 1024*1024*8)
 
 	for {
 		n, err := buffer.Read(p)
 		if err != nil{
 			if err == io.EOF {
-				fmt.Println(string(p[:n])) //should handle any remainding bytes.
+				fmt.Println(string(p[:n])) //should handle any remaining bytes.
 				break
 			}
 			fmt.Println(err)
@@ -62,19 +62,20 @@ func copyBufferToDB(buffer *bytes.Buffer) {
 		log.Println(err)
 		return
 	} else {
+		req.URL.Host = requestHost
 		saveToDB(req, "https")
 	}
 }
 
 
-func transfer(destination io.WriteCloser, source io.ReadCloser, copy bool) {
+func transfer(destination io.WriteCloser, source io.ReadCloser, copy bool, requestHost string) {
 	defer destination.Close()
 	defer source.Close()
 	if copy {
 		buffer := &bytes.Buffer{}
 		duplicateSources := io.MultiWriter(destination, buffer) //we copy data from source into buffer and destination
 		io.Copy(duplicateSources, source)
-		go copyBufferToDB(buffer)
+		go copyBufferToDB(buffer,  requestHost)
 
 	} else {
 		io.Copy(destination, source)
@@ -112,8 +113,8 @@ func handleCONNECT(writer http.ResponseWriter, req *http.Request) {
 	tlsConnection := tls.Server(clientConnection, tlsConfig)
 	err = tlsConnection.Handshake()
 
-	go transfer(destinationConnection, tlsConnection, true)
-	go transfer(tlsConnection, destinationConnection, false)
+	go transfer(destinationConnection, tlsConnection, true, req.URL.Host)
+	go transfer(tlsConnection, destinationConnection, false, req.URL.Host)
 }
 
 func handleHTTPRequests(writer http.ResponseWriter, req *http.Request) {

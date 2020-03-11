@@ -36,7 +36,9 @@ func MakeRequest (writer http.ResponseWriter, req *http.Request) {
 		utils.CreateAnswer(writer, 404, requests.CreateError(err.Error()))
 		return
 	}
-	request, err := http.NewRequest(requestModel.Method, fmt.Sprintf("%s://%s", requestModel.URLscheme, requestModel.URLhost), strings.NewReader(requestModel.Body))
+	address := fmt.Sprintf("%s://%s", requestModel.URLscheme, requestModel.URLhost)
+	fmt.Println(address)
+	request, err := http.NewRequest(requestModel.Method, address, strings.NewReader(requestModel.Body))
 	if err != nil {
 		utils.CreateAnswer(writer, 404, requests.CreateError(err.Error()))
 		return
