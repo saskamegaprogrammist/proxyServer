@@ -44,5 +44,7 @@ EXPOSE 5001
 
 COPY --from=build /opt/app/proxy /usr/bin/
 COPY --from=build /opt/app/repeater /usr/bin/
+COPY --from=build /opt/app/rootCert.cert /usr/bin/
+COPY --from=build /opt/app/rootKey.pem /usr/bin/
 
 CMD service postgresql start && proxy && repeater
