@@ -51,7 +51,7 @@ func (reqModel*Request) GetRequests() ([]Request, error) {
 	requestsFound := make([]Request, 0)
 	dataBase := db.GetDataBase()
 	transaction, _ := dataBase.Begin()
-	rows, err := transaction.Query("SELECT id, method, urlhost, urlscheme, headers::text[], body, contentlength, host, remoteaddr, requesturi FROM requests ORDER BY id DESC LIMIT 10;")
+	rows, err := transaction.Query("SELECT id, method, urlhost, urlscheme, headers, body, contentlength, host, remoteaddr, requesturi FROM requests ORDER BY id DESC LIMIT 10;")
 	if err != nil {
 		log.Println(err)
 		err = transaction.Rollback()
@@ -89,7 +89,7 @@ func (reqModel*Request) GetRequest(id int) error {
 	dataBase := db.GetDataBase()
 	transaction, _ := dataBase.Begin()
 	var headerArray []string
-	row := transaction.QueryRow("SELECT id, method, urlhost, urlscheme, headers::text[], body, contentlength, host, remoteaddr, requesturi FROM requests WHERE id = $1", id)
+	row := transaction.QueryRow("SELECT id, method, urlhost, urlscheme, headers, body, contentlength, host, remoteaddr, requesturi FROM requests WHERE id = $1", id)
 	err := row.Scan(&reqModel.Id, &reqModel.Method, &reqModel.URLhost, &reqModel.URLscheme, &headerArray,
 		&reqModel.Body, &reqModel.ContentLength, &reqModel.Host, &reqModel.RemoteAddr, &reqModel.RequestURI)
 	if err != nil {
