@@ -46,6 +46,5 @@ COPY --from=build  /opt/app/rootKey.pem /rootKey.pem
 
 RUN apt-get update  && apt-get install -y curl
 
-CMD service postgresql start && proxy
-CMD repeater
+CMD service postgresql start && proxy ; repeater
 
