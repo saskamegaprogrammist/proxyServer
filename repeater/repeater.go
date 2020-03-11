@@ -9,8 +9,8 @@ import (
 )
 
 func main() {
-	db.CreateDataBaseConnection("alexis", "sinope27", "localhost", "proxy", 20)
-	//db.InitDataBase()
+	db.CreateDataBaseConnection("docker", "docker", "localhost", "docker", 20)
+	//db.CreateDataBaseConnection("alexis", "sinope27", "localhost", "proxy", 20)
 	r := mux.NewRouter()
 	handlers.RepeaterClient = &http.Client{}
 	r.HandleFunc("/requests", handlers.GetLastRequests).Methods("GET")
