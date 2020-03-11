@@ -151,7 +151,7 @@ func main() {
 
 	server := &http.Server{
 		Handler:      http.HandlerFunc(handleRequests),
-		Addr:         "127.0.0.1:5000",
+		Addr:         ":5000",
 		TLSNextProto: make(map[string]func(*http.Server, *tls.Conn, http.Handler)),
 	}
 	rootCertificate = certificate.GetRootCertificate()
