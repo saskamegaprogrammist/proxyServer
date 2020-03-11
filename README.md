@@ -1,11 +1,11 @@
-##Функциональность
+## Функциональность
 Проксирование http
 
 Проксирование https
 
 Отправка сохраненного запроса
 
-##Как проверить работу
+## Как проверить работу
 (Использовала mozilla firefox)
 
 Добавить сертификат в rootCert.cert в браузер
@@ -18,7 +18,7 @@ sudo docker build -t alex https://github.com/saskamegaprogrammist/proxyServer.gi
 
 sudo docker run -p 5000:5000 -p 5001:5001 --name alex -t alex
 
-##Функциональность repeater
+## Функциональность repeater
 localhost:5001/requests - выдает информацию о последних 10 запросах
 
 localhost:5001/requests/{id} - повторяет запрос по id запроса
