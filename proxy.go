@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bufio"
+	"bytes"
 	"crypto/tls"
 	"fmt"
 	"github.com/saskamegaprogrammist/proxyServer/certificate"
@@ -11,15 +13,16 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 )
 
 var rootCertificate certificate.Cert
 
-func saveToDB(req *http.Request) {
+func saveToDB(req *http.Request, scheme string) {
 	var reqModel requests.Request
 	reqModel.Method = req.Method
 	reqModel.URLhost = req.URL.Host
-	reqModel.URLscheme = req.URL.Scheme
+	reqModel.URLscheme = scheme
 	header := make(map[string]string, 0)
 	for k, v := range req.Header {
 		header[k] = v[0]
@@ -38,14 +41,41 @@ func saveToDB(req *http.Request) {
 	}
 }
 
+func copyBufferToDB(buffer *bytes.Buffer) {
+	p := make([]byte, 1024*1024*8)
+
+	for {
+		n, err := buffer.Read(p)
+		if err != nil{
+			if err == io.EOF {
+				fmt.Println(string(p[:n])) //should handle any remainding bytes.
+				break
+			}
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		fmt.Println(string(p[:n]))
+	}
+	reader:=bufio.NewReader(bytes.NewReader(p))
+	req, err := http.ReadRequest(reader)
+	if err != nil {
+		log.Println(err)
+		return
+	} else {
+		saveToDB(req, "https")
+	}
+}
+
 
 func transfer(destination io.WriteCloser, source io.ReadCloser, copy bool) {
 	defer destination.Close()
 	defer source.Close()
 	if copy {
-		var buffer []byte
-		io.ReadFull(source,buffer)
-		fmt.Println("buffer", buffer)
+		buffer := &bytes.Buffer{}
+		duplicateSources := io.MultiWriter(destination, buffer) //we copy data from source into buffer and destination
+		io.Copy(duplicateSources, source)
+		go copyBufferToDB(buffer)
+
 	} else {
 		io.Copy(destination, source)
 	}
@@ -87,7 +117,7 @@ func handleCONNECT(writer http.ResponseWriter, req *http.Request) {
 }
 
 func handleHTTPRequests(writer http.ResponseWriter, req *http.Request) {
-	saveToDB(req)
+	saveToDB(req, "http")
 	resp, err := http.DefaultTransport.RoundTrip(req)
 	if err != nil {
 		log.Printf("proxy error: %s, request: %+v", err.Error(), req)
